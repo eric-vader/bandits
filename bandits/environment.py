@@ -1,6 +1,4 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import scipy.stats as stats
 
 from bandits.agent import BetaAgent
@@ -36,25 +34,29 @@ class Environment(object):
         return scores / experiments, optimal / experiments
 
     def plot_results(self, scores, optimal):
-        sns.set_style('white')
-        sns.set_context('talk')
-        plt.subplot(2, 1, 1)
+        import matplotlib.pyplot as plt
+        # plt.subplot(2, 1, 1)
         plt.title(self.label)
         plt.plot(scores)
         plt.ylabel('Average Reward')
         plt.legend(self.agents, loc=4)
-        plt.subplot(2, 1, 2)
+        plt.savefig("reward.png")
+        plt.clf()
+
+        # plt.subplot(2, 1, 2)
         plt.plot(optimal * 100)
         plt.ylim(0, 100)
         plt.ylabel('% Optimal Action')
         plt.xlabel('Time Step')
         plt.legend(self.agents, loc=4)
-        sns.despine()
-        plt.show()
+        plt.savefig("optimality.png")
+        plt.clf()
 
     def plot_beliefs(self):
-        sns.set_context('talk')
-        pal = sns.color_palette("cubehelix", n_colors=len(self.agents))
+        import matplotlib.pyplot as plt
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        pal = prop_cycle.by_key()['color']
+
         plt.title(self.label + ' - Agent Beliefs')
 
         rows = 2
@@ -77,7 +79,7 @@ class Environment(object):
                 for j, _y in enumerate(y):
                     axes[j].plot(x, _y, color=pal[i], alpha=0.8)
 
-        min_p = np.argmin(self.bandit.action_values)
+        legend_pos = len(axes)-1
         for i, ax in enumerate(axes):
             ax.set_xlim(0, 1)
             if i % cols != 0:
@@ -90,8 +92,8 @@ class Environment(object):
             if i == int(cols/2):
                 title = '{}-arm Bandit - Agent Estimators'.format(self.bandit.k)
                 ax.set_title(title)
-            if i == min_p:
-                ax.legend(self.agents)
-
-        sns.despine()
-        plt.show()
+            # if i == legend_pos:
+            #     ax.legend([ 'Ground Truth' ] + self.agents, loc=4)
+                
+        plt.savefig("beliefs.png")
+        plt.clf()

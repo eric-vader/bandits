@@ -76,7 +76,7 @@ class UCBPolicy(Policy):
         return 'UCB (c={})'.format(self.c)
 
     def choose(self, agent):
-        exploration = np.log(agent.t+1) / agent.action_attempts
+        exploration = np.log(agent.t+1) / (agent.action_attempts+1)
         exploration[np.isnan(exploration)] = 0
         exploration = np.power(exploration, 1/self.c)
 
