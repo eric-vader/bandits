@@ -56,7 +56,7 @@ class BinomialBandit(MultiArmedBandit):
         self.model = pm.Model()
         with self.model:
             self.bin = pm.Binomial('binomial', n=n*np.ones(k, dtype=np.int),
-                                   p=np.ones(k)/n, shape=(1, k), transform=None)
+                                   p=np.ones(k)/n, shape=(k,), transform=None)
         self._samples = None
         self._cursor = 0
 
