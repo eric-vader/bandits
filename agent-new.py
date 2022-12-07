@@ -97,8 +97,8 @@ class BetaAgent(Agent):
         super(BetaAgent, self).__init__(bandit, policy)
         self.n = bandit.n
         self.ts = ts
-        self._alpha = np.ones(self.k)
-        self._beta = np.ones(self.k)
+        self.alpha = np.ones(self.k)
+        self.beta = np.ones(self.k)
         self._value_estimates = np.zeros(self.k)
 
         self.reset()
@@ -112,8 +112,8 @@ class BetaAgent(Agent):
         super(BetaAgent, self).reset()
         self.model = pm.Model()
         with self.model:
-            self._prior = pm.Beta('prior', alpha=self._alpha,
-                                  beta=self._beta, shape=(self.k,),
+            self._prior = pm.Beta('prior', alpha=self.alpha,
+                                  beta=self.beta, shape=(self.k,),
                                   transform=None)
     def observe(self, reward):
         self.action_attempts[self.last_action] += 1
@@ -126,11 +126,3 @@ class BetaAgent(Agent):
         else:
             self._value_estimates = self.alpha / (self.alpha + self.beta)
         self.t += 1
-
-    @property
-    def alpha(self):
-        return self._alpha
-
-    @property
-    def beta(self):
-        return self._beta
