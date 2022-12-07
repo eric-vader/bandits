@@ -1,6 +1,4 @@
 import numpy as np
-import pymc3 as pm
-
 
 class MultiArmedBandit(object):
     """
@@ -48,15 +46,18 @@ class BinomialBandit(MultiArmedBandit):
     In the bandit scenario, this can be used to approximate a discrete user
     rating or "strength" of response to a single event.
     """
-    def __init__(self, k, n, p=None, t=None):
+    def __init__(self, k, n, p=None, t=None, rng_seed=0):
         super(BinomialBandit, self).__init__(k)
         self.n = n
         self.p = p
+
+        self.rng = np.random.default_rng(rng_seed)
+
+        self._n = n*np.ones(k, dtype=np.int)
+        self._p = self.rng.uniform(size=self.k) # np.ones(self.k)/self.n
+
         self.t = t
-        self.model = pm.Model()
-        with self.model:
-            self.bin = pm.Binomial('binomial', n=n*np.ones(k, dtype=np.int),
-                                   p=np.ones(k)/n, shape=(k,), transform=None)
+        
         self._samples = None
         self._cursor = 0
 
@@ -64,12 +65,14 @@ class BinomialBandit(MultiArmedBandit):
 
     def reset(self):
         if self.p is None:
-            self.action_values = np.random.uniform(size=self.k)
+            self.action_values = self.rng.uniform(size=self.k) 
         else:
             self.action_values = self.p
-        self.bin.distribution.p = self.action_values
+        
+        self._p = self.action_values
+
         if self.t is not None:
-            self._samples = self.bin.random(size=self.t).squeeze()
+            self._samples = self.rng.binomial(self._n, self._p, size=(self.t,self.k))
             self._cursor = 0
 
         self.optimal = np.argmax(self.action_values)
@@ -80,7 +83,7 @@ class BinomialBandit(MultiArmedBandit):
     @property
     def sample(self):
         if self._samples is None:
-            return self.bin.random()
+            return self.rng.binomial(self._n, self._p, size=(self.k,))
         else:
             val = self._samples[self._cursor]
             self._cursor += 1
@@ -96,5 +99,5 @@ class BernoulliBandit(BinomialBandit):
     In the bandit scenario, this can be used to approximate a hit or miss event,
     such as if a user clicks on a headline, ad, or recommended product.
     """
-    def __init__(self, k, p=None, t=None):
-        super(BernoulliBandit, self).__init__(k, 1, p=p, t=t)
+    def __init__(self, **kwargs):
+        super(BernoulliBandit, self).__init__(n=1, **kwargs)

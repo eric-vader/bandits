@@ -1,5 +1,3 @@
 # General
 numpy
-pandas
 scipy
-pymc3

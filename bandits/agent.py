@@ -1,6 +1,4 @@
 import numpy as np
-import pymc3 as pm
-
 
 class Agent(object):
     """
@@ -93,15 +91,16 @@ class BetaAgent(Agent):
      or Binomial likelihood, as these distributions have a Beta distribution as
      a conjugate prior.
     """
-    def __init__(self, bandit, policy, ts=True):
+    def __init__(self, bandit, policy, ts=True, rng_seed=0):
         super(BetaAgent, self).__init__(bandit, policy)
         self.n = bandit.n
         self.ts = ts
-        self.model = pm.Model()
-        with self.model:
-            self._prior = pm.Beta('prior', alpha=np.ones(self.k),
-                                  beta=np.ones(self.k), shape=(self.k,),
-                                  transform=None)
+        
+        self.rng = np.random.default_rng(rng_seed)
+
+        self.alpha = np.ones(self.k)
+        self.beta = np.ones(self.k)
+        
         self._value_estimates = np.zeros(self.k)
 
     def __str__(self):
@@ -112,8 +111,8 @@ class BetaAgent(Agent):
 
     def reset(self):
         super(BetaAgent, self).reset()
-        self._prior.distribution.alpha = np.ones(self.k)
-        self._prior.distribution.beta = np.ones(self.k)
+        self.alpha = np.ones(self.k)
+        self.beta = np.ones(self.k)
 
     def observe(self, reward):
         self.action_attempts[self.last_action] += 1
@@ -122,15 +121,7 @@ class BetaAgent(Agent):
         self.beta[self.last_action] += self.n - reward
 
         if self.ts:
-            self._value_estimates = self._prior.random()
+            self._value_estimates = self.rng.beta(self.alpha, self.beta) # self._prior.random()
         else:
             self._value_estimates = self.alpha / (self.alpha + self.beta)
         self.t += 1
-
-    @property
-    def alpha(self):
-        return self._prior.distribution.alpha
-
-    @property
-    def beta(self):
-        return self._prior.distribution.beta

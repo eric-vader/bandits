@@ -10,6 +10,6 @@ setup(
     packages=[package for package in find_packages()
               if package.startswith('bandits')],
     install_requires=[
-        'numpy', 'scipy', 'matplotlib', 'seaborn', 'pymc3'
+        'numpy', 'scipy'
     ]
 )
